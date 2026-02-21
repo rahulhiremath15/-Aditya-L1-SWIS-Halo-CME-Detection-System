@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CME Detection Dashboard</title>
+    <style>
+        body { font-family: Arial; background: #f2f2f2; margin: 20px; color: #333; }
+        h1 { color: #222; }
+        .section { margin-bottom: 30px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #4CAF50; color: white; }
+        img { max-width: 100%; border: 1px solid #ccc; border-radius: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🌞 Aditya-L1 SWIS - Halo CME Detection Dashboard</h1>
+
+    <div class="section">
+        <h2>📊 Detection Summary</h2>
+        <p><strong>Total Events:</strong> {{ summary.total_events }}</p>
+        <p><strong>Total Detection Points:</strong> {{ summary.total_detection_points }}</p>
+        <p><strong>Detection Rate:</strong> {{ '{:.4f}'.format(summary.detection_rate) }}</p>
+    </div>
+
+    <div class="section">
+        <h2>📈 Full Time Series Plot</h2>
+        <img src="/plots/full_timeseries_with_events.png" alt="Full Time Series">
+    </div>
+
+    <div class="section">
+        <h2>🌪 Detected CME Events</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration (hrs)</th>
+                    <th>Max Velocity (km/s)</th>
+                    <th>Max Temp (K)</th>
+                    <th>α/p Ratio</th>
+                    <th>Type</th>
+                    <th>Confidence</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i, event in enumerate(events) %}
+                <tr>
+                    <td>{{ i+1 }}</td>
+                    <td>{{ event.start_time }}</td>
+                    <td>{{ event.end_time }}</td>
+                    <td>{{ event.duration_hours }}</td>
+                    <td>{{ event.max_velocity }}</td>
+                    <td>{{ event.max_temperature }}</td>
+                    <td>{{ '{:.3f}'.format(event.max_alpha_proton_ratio) }}</td>
+                    <td>{{ event.event_type }}</td>
+                    <td>{{ event.confidence }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>📊 Statistical Summary</h2>
+        <img src="/plots/statistics_summary.png" alt="Stats Summary">
+    </div>
+
+</body>
+</html>

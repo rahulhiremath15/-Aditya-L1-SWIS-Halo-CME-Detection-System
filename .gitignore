@@ -1,0 +1,16 @@
+# Ignore all large data files
+*.cdf
+*.xlsx
+*.csv
+*.pptx
+*.pkl
+
+# Ignore specific data directories
+data/raw_data/
+**/__pycache__/
+.venv/
+.env
+
+# But keep folder structure
+!data/.gitkeep
+!data/raw_data/sample_swis_data.csv
