@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 import os
 from datetime import timedelta
+from .config_loader import config
 
 class CMEEventDetector:
     """Detect CME events using ensemble of methods"""
@@ -95,7 +96,7 @@ class CMEEventDetector:
         # Alpha-proton ratio enhancement
         if 'alpha_proton_ratio' in df.columns:
             baseline_ratio = self.baseline_stats.get('alpha_proton_ratio', {}).get('median', None)
-            enhancement_factor = thresholds.get('alpha_proton_ratio', {}).get('enhancement', None)
+            enhancement_factor = thresholds.get('alpha_proton_ratio', {}).get('enhancement_factor', None)
             if baseline_ratio is not None and enhancement_factor is not None:
                 df['alpha_proton_ratio'] = pd.to_numeric(df['alpha_proton_ratio'], errors='coerce')
                 if 'stat_detection' not in df.columns:
@@ -155,6 +156,18 @@ class CMEEventDetector:
     def apply_ml_detection(self, df):
         """Apply machine learning detection"""
         print("Applying ML detection...")
+        
+        # Safety check for models and scaler
+        if not self.models or self.scaler is None:
+            print("ML models/scaler not loaded — skipping ML detection.")
+            df['rf_probability'] = 0.0
+            df['svm_probability'] = 0.0
+            df['xgb_probability'] = 0.0
+            df['iso_prediction'] = 0
+            df['rf_prediction'] = 0
+            df['svm_prediction'] = 0
+            df['xgb_prediction'] = 0
+            return df
         
         # Prepare features
         X = df[self.feature_columns].copy()

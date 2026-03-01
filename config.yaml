@@ -1,0 +1,89 @@
+# CME Detection System Configuration
+# Physical constants and parameters
+
+# Magnetic field configuration (Tesla)
+# Default IMF B-field value - should be replaced with actual measurements when available
+magnetic_field:
+  default_b: 5e-9  # 5 nT typical IMF value
+  source: "default"  # Options: "default", "measured", "config"
+
+# Detection thresholds
+thresholds:
+  alpha_proton_ratio:
+    enhancement_factor: 2.0  # 2x baseline for CME detection
+    absolute_threshold: 0.08   # Literature-based threshold
+  
+  proton_velocity:
+    high_speed: 600  # km/s for fast CMEs
+    gradient_threshold: 50  # km/s per hour
+    
+  proton_temperature:
+    enhancement_factor: 1.5  # 1.5x baseline
+    absolute_threshold: 100000  # 100,000 K
+
+# Model parameters
+models:
+  isolation_forest:
+    contamination: 0.05  # Reduced from 0.1 for space weather (5% anomaly rate)
+    random_state: 42
+    
+  ensemble:
+    min_duration_minutes: 30  # Minimum CME duration
+    
+# Data processing parameters
+processing:
+  rolling_windows:
+    baseline: 1440  # 24 hours in minutes
+    short_term: 60   # 1 hour in minutes
+    gradient: 5       # 5 minutes for gradient calculation
+  
+  quality_control:
+    max_missing_percentage: 10  # Maximum % missing data allowed
+    outlier_threshold: 5.0      # Z-score threshold for outliers
+
+# Feature engineering
+features:
+  physics_informed:
+    enable_alfven_speed: true
+    enable_alfven_mach: true
+    enable_dynamic_pressure: true
+    enable_plasma_beta: true
+    
+# Unit conversions
+units:
+  density_conversion: 1e6    # cm^-3 to m^-3
+  velocity_conversion: 1000    # km/s to m/s
+  temperature_unit: "K"       # Kelvin
+  
+# Adaptive ensemble weights
+ensemble_weights:
+  high_velocity:  # > 500 km/s
+    statistical: 0.25
+    rf: 0.25
+    svm: 0.20
+    iso: 0.10
+    xgb: 0.20
+    
+  high_density:   # > 10 particles/cm^3
+    statistical: 0.30
+    rf: 0.25
+    svm: 0.20
+    iso: 0.10
+    xgb: 0.15
+    
+  quiet_solar_wind:  # Default conditions
+    statistical: 0.35
+    rf: 0.25
+    svm: 0.15
+    iso: 0.10
+    xgb: 0.15
+
+# Performance and validation
+validation:
+  class_balance_handling: "balanced"  # Options: "balanced", "smote", "threshold"
+  metrics_focus: ["precision", "recall", "f1", "auc_pr"]  # Priority metrics
+  
+# Logging configuration
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

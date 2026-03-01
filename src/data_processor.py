@@ -1,9 +1,12 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 import pandas as pd
 import numpy as np
 from scipy import signal
 from scipy.stats import zscore
-import warnings
-warnings.filterwarnings('ignore')
+from .config_loader import config
+from astropy import constants as const
 
 class SWISDataProcessor:
     """Process SWIS Level-2 data for CME detection"""
@@ -53,17 +56,24 @@ class SWISDataProcessor:
         df['alpha_proton_ratio'] = df['alpha_flux'] / df['proton_flux']
         
         # Thermal speeds
-        mp = 1.67e-27  # proton mass in kg
-        k = 1.38e-23   # Boltzmann constant
+        mp = const.m_p.value  # Proton mass from astropy
+        k = const.k_B.value  # Boltzmann constant from astropy
         df['proton_thermal_speed'] = np.sqrt(2 * k * df['proton_temperature'] / mp) / 1000  # km/s
         
         # Enhanced plasma beta calculation
-        B = 5e-9  # Typical IMF strength in Tesla (can be made configurable)
-        mu_0 = 4 * np.pi * 1e-7
-        df['proton_beta_enhanced'] = (2 * 1.67e-27 * df['proton_density'] * 1e6 * k * df['proton_temperature']) / (B**2 / mu_0)
+        B = config.get_magnetic_field()  # Get from configuration
+        mu_0 = const.mu0.value  # Use astropy constant
+        k = const.k_B.value  # Boltzmann constant from astropy
+        mp = const.m_p.value  # Proton mass from astropy
+        
+        # Unit conversions from config
+        unit_conversions = config.get_unit_conversions()
+        density_conv = unit_conversions.get('density_conversion', 1e6)
+        
+        df['proton_beta_enhanced'] = (2 * mp * df['proton_density'] * density_conv * k * df['proton_temperature']) / (B**2 / mu_0)
         
         # Alfvén speed calculation
-        df['alfven_speed'] = B / np.sqrt(mu_0 * df['proton_density'] * 1.67e-27 * 1e6) / 1000  # km/s
+        df['alfven_speed'] = B / np.sqrt(mu_0 * df['proton_density'] * density_conv * mp) / 1000  # km/s
         
         # Alfvén Mach number
         df['alfven_mach'] = df['proton_velocity'] / df['alfven_speed']

@@ -170,10 +170,34 @@ Examples:
 
 
 def launch_web_dashboard():
+    from src.data_processor import SWISDataProcessor
+    from src.cme_detector import CMEEventDetector
+    from src.CMEVisualizationDashboard import CMEVisualizationDashboard
     from cme_web_app import app
+
+    print("WEB MODE: Generating dashboard...")
+
+    # Load sample data automatically
+    input_file = 'data/raw_data/sample_swis_data.csv'
+
+    processor = SWISDataProcessor()
+    processed_df = processor.process_swis_data(input_file)
+
+    detector = CMEEventDetector()
+    detection_results = detector.detect_cme_events(processed_df)
+
+    dashboard = CMEVisualizationDashboard()
+    fig = dashboard.create_comprehensive_dashboard(
+        processed_df,
+        detection_results
+    )
+
+    dashboard.save_dashboard_html(fig, "cme_dashboard.html")
+
+    print("Dashboard generated successfully.")
+    print("Launching Flask server...")
+
     app.run(debug=True)
-    print("Launching Flask web dashboard...")
-    print("Open your browser to: http://localhost:5000")
 
 
 if __name__ == "__main__":
